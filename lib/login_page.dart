@@ -41,8 +41,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     customSizeBox(),
-                    TextField(decoration: customInputDecoration("Hastane Id")),
-                    customSizeBox(),
                     TextField(
                       decoration: customInputDecoration("Kullanıcı Adı"),
                     ),
@@ -61,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
                     customSizeBox(),
                     Center(
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () async {},
                         child: Container(
                           height: 50,
                           width: 150,
