@@ -1,3 +1,4 @@
+import 'package:dent_bul_hospital_app/auth/auth-service.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -8,6 +9,11 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isloading = false;
+
   @override
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
@@ -42,10 +48,14 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     customSizeBox(),
                     TextField(
-                      decoration: customInputDecoration("Kullanıcı Adı"),
+                      controller: _emailController,
+                      decoration: customInputDecoration("Mail Adresi"),
                     ),
                     customSizeBox(),
-                    TextField(decoration: customInputDecoration("Şifre")),
+                    TextField(
+                      controller: _passwordController,
+                      decoration: customInputDecoration("Şifre"),
+                    ),
                     customSizeBox(),
                     Center(
                       child: TextButton(
@@ -59,20 +69,59 @@ class _LoginPageState extends State<LoginPage> {
                     customSizeBox(),
                     Center(
                       child: TextButton(
-                        onPressed: () async {},
+                        onPressed: () async {
+                          try {
+                            await _authService.signInWithEmailPassword(
+                              _emailController.text,
+                              _passwordController.text,
+                            );
+                            if (!_authService.isEmailConfirmed()) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("Email adresinizi doğrulayın"),
+                                  backgroundColor: Colors.orange,
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Giriş Başarılı!'),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  e.toString().replaceFirst("Exception: ", ""),
+                                ),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          } finally {
+                            setState(() {
+                              _isloading = false;
+                            });
+                          }
+                        },
                         child: Container(
                           height: 50,
                           width: 150,
                           margin: EdgeInsets.symmetric(horizontal: 60),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(50),
-                            color: Color(0xff31274F),
+                            color: _isloading ? Colors.grey : Color(0xff31274F),
                           ),
                           child: Center(
-                            child: Text(
-                              "Giriş Yap",
-                              style: TextStyle(color: Colors.white),
-                            ),
+                            child: _isloading
+                                ? CircularProgressIndicator(color: Colors.white)
+                                : Text(
+                                    "Giriş Yap",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
                           ),
                         ),
                       ),
@@ -109,5 +158,12 @@ class _LoginPageState extends State<LoginPage> {
         borderSide: BorderSide(color: Colors.grey),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

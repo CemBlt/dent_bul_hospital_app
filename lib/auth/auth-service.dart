@@ -5,10 +5,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+  bool isEmailConfirmed() {
+    final user = _supabase.auth.currentUser;
+    return user?.emailConfirmedAt != null;
+  }
+
   Future<AuthResponse> signInWithEmailPassword(
     String email,
     String password,
   ) async {
+    _isLoading = true;
     try {
       return await _supabase.auth.signInWithPassword(
         password: password,
@@ -33,6 +41,24 @@ class AuthService {
         // Diğer hatalar
         throw Exception('Beklenmeyen bir hata oluştu');
       }
+    } finally {
+      _isLoading = false;
+    }
+  }
+
+  Future<void> resendConfirmationEmail(String email) async {
+    try {
+      await _supabase.auth.resend(type: OtpType.signup, email: email);
+    } catch (e) {
+      throw Exception('Email doğrulama gönderilemedi');
+    }
+  }
+
+  Future<void> signOut() async {
+    try {
+      await _supabase.auth.signOut();
+    } catch (e) {
+      throw Exception("Çıkış yapılırken hata oluştu");
     }
   }
 }
