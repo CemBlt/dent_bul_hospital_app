@@ -1,5 +1,7 @@
 import 'package:dent_bul_hospital_app/auth/auth-service.dart';
+import 'package:dent_bul_hospital_app/clinic_profile_page.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,6 +15,8 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   bool _isloading = false;
+  bool _obscurePassword = true;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +58,28 @@ class _LoginPageState extends State<LoginPage> {
                     customSizeBox(),
                     TextField(
                       controller: _passwordController,
-                      decoration: customInputDecoration("Şifre"),
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        hintText: "Şifre",
+                        hintStyle: TextStyle(color: Colors.grey),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                        ),
+                      ),
                     ),
                     customSizeBox(),
                     Center(
@@ -69,21 +94,24 @@ class _LoginPageState extends State<LoginPage> {
                     customSizeBox(),
                     Center(
                       child: TextButton(
-                        onPressed: () async {
+                        onPressed: _isloading ? null : () async {
+                          setState(() {
+                            _isloading = true;
+                          });
                           try {
-                            await _authService.signInWithEmailPassword(
+                            final clinic = await _authService.signInWithClinicCredentials(
                               _emailController.text,
                               _passwordController.text,
                             );
-                            if (!_authService.isEmailConfirmed()) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Email adresinizi doğrulayın"),
-                                  backgroundColor: Colors.orange,
-                                  duration: Duration(seconds: 3),
+
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ClinicProfilePage(
+                                  clinicId: clinic!['id'],
                                 ),
-                              );
-                            }
+                              ),
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Giriş Başarılı!'),
@@ -167,3 +195,4 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 }
+
