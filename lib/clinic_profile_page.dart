@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:dent_bul_hospital_app/auth/auth_service.dart';
 
 class ClinicProfilePage extends StatefulWidget {
   final String clinicId;
@@ -11,6 +12,7 @@ class ClinicProfilePage extends StatefulWidget {
 
 class _ClinicProfilePageState extends State<ClinicProfilePage> {
   final SupabaseClient _supabase = Supabase.instance.client;
+  final AuthService _authService = AuthService();
 
   // Clinic data
   Map<String, dynamic>? _clinicData;
@@ -18,7 +20,6 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
   List<Map<String, dynamic>> _appointments = [];
 
   bool _isLoading = true;
-  bool _isUpdating = false;
 
   final _clinicNameController = TextEditingController();
   final _cityController = TextEditingController();
@@ -28,11 +29,13 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
   final _doctorCountController = TextEditingController();
   final _languagesController = TextEditingController();
 
+  // Password change controllers
+  final _currentPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
   // Form state
   bool _hasDisabledAccess = false;
-  bool _is247 = false;
-  TimeOfDay? _startTime;
-  TimeOfDay? _endTime;
 
   @override
   void initState() {
@@ -151,6 +154,10 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
           IconButton(
             icon: Icon(Icons.edit),
             onPressed: () => _showEditDialog(),
+          ),
+          IconButton(
+            icon: Icon(Icons.lock),
+            onPressed: () => _showChangePasswordDialog(),
           ),
         ],
       ),
@@ -1010,8 +1017,88 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
           _clinicData!['doctor_count']?.toString() ?? '';
       _languagesController.text = _clinicData!['languages'] ?? '';
       _hasDisabledAccess = _clinicData!['has_disabled_access'] == true;
-      _is247 = _clinicData!['is_247'] == true;
     }
+  }
+
+  void _showChangePasswordDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Şifre Değiştir'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _currentPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Mevcut Şifre'),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _newPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Yeni Şifre'),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Yeni Şifre Tekrarı'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (_newPasswordController.text.isEmpty || 
+                  _currentPasswordController.text.isEmpty ||
+                  _confirmPasswordController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Tüm alanları doldurun')),
+                );
+                return;
+              }
+              
+              if (_newPasswordController.text != _confirmPasswordController.text) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Yeni şifreler eşleşmiyor')),
+                );
+                return;
+              }
+              
+              try {
+                await _authService.changePassword(
+                  _clinicData!['email'],
+                  _currentPasswordController.text,
+                  _newPasswordController.text,
+                );
+                
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Şifre başarıyla değiştirildi')),
+                );
+                
+                // Clear controllers
+                _currentPasswordController.clear();
+                _newPasswordController.clear();
+                _confirmPasswordController.clear();
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+                );
+              }
+            },
+            child: Text('Değiştir'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -1023,6 +1110,9 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
     _emailController.dispose();
     _doctorCountController.dispose();
     _languagesController.dispose();
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 }

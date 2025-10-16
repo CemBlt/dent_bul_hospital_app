@@ -1,7 +1,6 @@
-import 'package:dent_bul_hospital_app/auth/auth-service.dart';
+import 'package:dent_bul_hospital_app/auth/auth_service.dart';
 import 'package:dent_bul_hospital_app/clinic_profile_page.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,7 +15,6 @@ class _LoginPageState extends State<LoginPage> {
   final AuthService _authService = AuthService();
   bool _isloading = false;
   bool _obscurePassword = true;
-  final SupabaseClient _supabase = Supabase.instance.client;
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +29,14 @@ class _LoginPageState extends State<LoginPage> {
               Container(
                 height: height * .25,
                 decoration: BoxDecoration(
-                  image: DecorationImage(
-                    fit: BoxFit.cover,
-                    image: AssetImage("assets/"),
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.local_hospital,
+                    size: 80,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -84,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
                     customSizeBox(),
                     Center(
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () => _showForgotPasswordDialog(),
                         child: Text(
                           "Şifremi Unuttum",
                           style: TextStyle(color: Colors.pink[200]),
@@ -170,6 +173,60 @@ class _LoginPageState extends State<LoginPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    final emailController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Şifre Sıfırlama'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Email adresinizi girin, şifre sıfırlama linki gönderilecektir.'),
+            SizedBox(height: 10),
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                hintText: 'ornek@email.com',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (emailController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Email adresi giriniz')),
+                );
+                return;
+              }
+              
+              try {
+                await _authService.resetPassword(emailController.text);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Şifre sıfırlama emaili gönderildi')),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+                );
+              }
+            },
+            child: Text('Gönder'),
+          ),
+        ],
       ),
     );
   }
