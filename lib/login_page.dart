@@ -29,15 +29,7 @@ class _LoginPageState extends State<LoginPage> {
               Container(
                 height: height * .25,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.local_hospital,
-                    size: 80,
-                    color: Colors.white,
-                  ),
                 ),
               ),
               Padding(
@@ -67,7 +59,9 @@ class _LoginPageState extends State<LoginPage> {
                         hintStyle: TextStyle(color: Colors.grey),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
                             color: Colors.grey,
                           ),
                           onPressed: () {
@@ -97,47 +91,53 @@ class _LoginPageState extends State<LoginPage> {
                     customSizeBox(),
                     Center(
                       child: TextButton(
-                        onPressed: _isloading ? null : () async {
-                          setState(() {
-                            _isloading = true;
-                          });
-                          try {
-                            final clinic = await _authService.signInWithClinicCredentials(
-                              _emailController.text,
-                              _passwordController.text,
-                            );
+                        onPressed: _isloading
+                            ? null
+                            : () async {
+                                setState(() {
+                                  _isloading = true;
+                                });
+                                try {
+                                  final clinic = await _authService
+                                      .signInWithClinicCredentials(
+                                        _emailController.text,
+                                        _passwordController.text,
+                                      );
 
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ClinicProfilePage(
-                                  clinicId: clinic!['id'],
-                                ),
-                              ),
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Giriş Başarılı!'),
-                                backgroundColor: Colors.green,
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  e.toString().replaceFirst("Exception: ", ""),
-                                ),
-                                backgroundColor: Colors.red,
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                          } finally {
-                            setState(() {
-                              _isloading = false;
-                            });
-                          }
-                        },
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ClinicProfilePage(
+                                        clinicId: clinic!['id'],
+                                      ),
+                                    ),
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Giriş Başarılı!'),
+                                      backgroundColor: Colors.green,
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        e.toString().replaceFirst(
+                                          "Exception: ",
+                                          "",
+                                        ),
+                                      ),
+                                      backgroundColor: Colors.red,
+                                      duration: Duration(seconds: 3),
+                                    ),
+                                  );
+                                } finally {
+                                  setState(() {
+                                    _isloading = false;
+                                  });
+                                }
+                              },
                         child: Container(
                           height: 50,
                           width: 150,
@@ -179,7 +179,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void _showForgotPasswordDialog() {
     final emailController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -187,7 +187,9 @@ class _LoginPageState extends State<LoginPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Email adresinizi girin, şifre sıfırlama linki gönderilecektir.'),
+            Text(
+              'Email adresinizi girin, şifre sıfırlama linki gönderilecektir.',
+            ),
             SizedBox(height: 10),
             TextField(
               controller: emailController,
@@ -206,12 +208,12 @@ class _LoginPageState extends State<LoginPage> {
           TextButton(
             onPressed: () async {
               if (emailController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Email adresi giriniz')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Email adresi giriniz')));
                 return;
               }
-              
+
               try {
                 await _authService.resetPassword(emailController.text);
                 Navigator.pop(context);
@@ -220,7 +222,9 @@ class _LoginPageState extends State<LoginPage> {
                 );
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+                  SnackBar(
+                    content: Text(e.toString().replaceFirst('Exception: ', '')),
+                  ),
                 );
               }
             },
@@ -252,4 +256,3 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 }
-
